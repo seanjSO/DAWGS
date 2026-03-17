@@ -99,6 +99,31 @@ func (s *Translator) buildTraversalPatternRoot(partFrame *Frame, traversalStep *
 				},
 			}},
 		})
+	} else if traversalStep.RightNodeBound {
+		nextSelect.From = append(nextSelect.From, pgsql.FromClause{
+			Source: pgsql.TableReference{
+				Name: pgsql.CompoundIdentifier{partFrame.Previous.Binding.Identifier},
+			},
+			Joins: []pgsql.Join{{
+				Table: pgsql.TableReference{
+					Name:    pgsql.CompoundIdentifier{pgsql.TableEdge},
+					Binding: models.OptionalValue(traversalStep.Edge.Identifier),
+				},
+				JoinOperator: pgsql.JoinOperator{
+					JoinType:   pgsql.JoinTypeInner,
+					Constraint: traversalStep.RightNodeJoinCondition,
+				},
+			}, {
+				Table: pgsql.TableReference{
+					Name:    pgsql.CompoundIdentifier{pgsql.TableNode},
+					Binding: models.OptionalValue(traversalStep.LeftNode.Identifier),
+				},
+				JoinOperator: pgsql.JoinOperator{
+					JoinType:   pgsql.JoinTypeInner,
+					Constraint: traversalStep.LeftNodeJoinCondition,
+				},
+			}},
+		})
 	} else {
 		if previousFrame, hasPrevious := s.previousValidFrame(traversalStep.Frame); hasPrevious {
 			nextSelect.From = append(nextSelect.From, pgsql.FromClause{
